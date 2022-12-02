@@ -21,3 +21,4 @@ regex = "1.7.0"
 # lib proc-macro dependencies
 syn = { version = "1.0.104", features = ["full"] }
 quote = "1.0.21"
+anyhow = "1.0.66"
