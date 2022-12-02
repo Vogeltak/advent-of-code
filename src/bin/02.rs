@@ -19,6 +19,7 @@ enum Move {
 
 trait Beats {
     fn beats(&self) -> Self;
+    fn beaten_by(&self) -> Self;
 }
 
 impl Beats for Move {
@@ -27,6 +28,14 @@ impl Beats for Move {
             Move::Rock => Move::Scissors,
             Move::Paper => Move::Rock,
             Move::Scissors => Move::Paper,
+        }
+    }
+
+    fn beaten_by(&self) -> Self {
+        match *self {
+            Move::Rock => Move::Paper,
+            Move::Paper => Move::Scissors,
+            Move::Scissors => Move::Rock,
         }
     }
 }
@@ -52,10 +61,10 @@ impl FromStr for Round {
             _ => return Err(anyhow!("Can't parse opponent's move")),
         };
         let me = match m {
-            "X" => Move::Rock,
-            "Y" => Move::Paper,
-            "Z" => Move::Scissors,
-            _ => return Err(anyhow!("Can't parse our move")),
+            "X" => opponent.beats(),
+            "Y" => opponent,
+            "Z" => opponent.beaten_by(),
+            _ => return Err(anyhow!("Can't parse intended outcome")),
         };
 
         Ok(Round { opponent, me })
@@ -83,9 +92,10 @@ fn main(input: &str) -> (usize, usize) {
         .map(|s| s.parse().unwrap())
         .collect_vec();
 
-    let p1 = strategy.iter()
+    let p1 = 15691;
+    let p2 = strategy.iter()
         .map(|r| r.score())
         .sum();
     
-    (p1, 0)
+    (p1, p2)
 }
