@@ -22,7 +22,7 @@ fn main(input: &str) -> (usize, usize) {
 
     let p2 = input.lines()
         .tuples()
-        .map(|(a,b,c)| same_char(a, String::from(same_char(b, c).iter().collect::<String>()).as_str()))
+        .map(|(a,b,c)| same_char(a, same_char(b, c).iter().collect::<String>().as_str()))
         .map(|c| value(c[0]))
         .sum();
 

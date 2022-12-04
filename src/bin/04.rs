@@ -13,10 +13,10 @@ impl FromStr for Range {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let (start, end) = s
-            .split_once("-")
+            .split_once('-')
             .unwrap();
 
-        Ok(Range {
+        Ok(Self {
             start: start.parse()?,
             end: end.parse()?
         })
@@ -36,7 +36,7 @@ impl Range {
 #[aoc::main(04)]
 fn main(input: &str) -> (usize, usize) {
     let input = input.lines()
-        .map(|l| l.split_once(",").unwrap())
+        .map(|l| l.split_once(',').unwrap())
         .map(|(a,b)| (Range::from_str(a).unwrap(), Range::from_str(b).unwrap()))
         .collect_vec();
     

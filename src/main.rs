@@ -13,7 +13,7 @@ fn main() {
     let total_time = (1..=25).map(|day_num| {
         let day = format!("{:0>2}", day_num);
         let cmd = Command::new("cargo")
-            .args(&["run", "--release", "--bin", &day])
+            .args(["run", "--release", "--bin", &day])
             .output()
             .unwrap();
         let output = String::from_utf8(cmd.stdout).unwrap();

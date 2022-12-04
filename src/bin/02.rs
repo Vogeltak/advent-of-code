@@ -51,7 +51,7 @@ impl FromStr for Round {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let (o, m) = s
-            .split_once(" ")
+            .split_once(' ')
             .unwrap();
 
         let opponent = match o {
