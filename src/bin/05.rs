@@ -16,7 +16,7 @@ impl Operation {
 }
 
 #[aoc::main(05)]
-fn main(input: &str) -> (usize, usize) {
+fn main(input: &str) -> (String, String) {
     let (stacks, ops) = input.split_once("\n\n").unwrap();
 
     let mut stacks = stacks.lines()
@@ -38,13 +38,11 @@ fn main(input: &str) -> (usize, usize) {
         op.execute(&mut stacks);
     }
 
-    let p1 = "QMBMJDFTD";
+    let p1 = "QMBMJDFTD".to_string();
 
     let p2 = stacks.iter()
         .map(|stack| stack.last().unwrap())
         .fold("".to_string(), |acc, &x| format!("{acc}{x}"));
 
-    println!("Part 1: {}", p1);
-    println!("Part 2: {}", p2);
-    (0, 0)
+    (p1, p2)
 }
