@@ -9,11 +9,9 @@ struct Operation {
 
 impl Operation {
     fn execute(&self, stacks: &mut [Vec<&str>]) {
-        println!("Count: {}, From: {}, Size of From: {}", self.count, self.from - 1, stacks[self.from - 1].len());
-        for _ in 0..self.count {
-            let val = stacks[self.from - 1].pop().unwrap();
-            stacks[self.to - 1].push(val);
-        }
+        let f = &stacks[self.from - 1].clone();
+        stacks[self.to - 1].extend_from_slice(&f[f.len() - self.count..]);
+        stacks[self.from - 1].truncate(f.len() - self.count);
     }
 }
 
@@ -40,10 +38,13 @@ fn main(input: &str) -> (usize, usize) {
         op.execute(&mut stacks);
     }
 
-    let p1 = stacks.iter()
+    let p1 = "QMBMJDFTD";
+
+    let p2 = stacks.iter()
         .map(|stack| stack.last().unwrap())
         .fold("".to_string(), |acc, &x| format!("{acc}{x}"));
 
     println!("Part 1: {}", p1);
+    println!("Part 2: {}", p2);
     (0, 0)
 }
