@@ -8,10 +8,17 @@ struct Operation {
 }
 
 impl Operation {
-    fn execute(&self, stacks: &mut [Vec<&str>]) {
-        let f = &stacks[self.from - 1].clone();
-        stacks[self.to - 1].extend_from_slice(&f[f.len() - self.count..]);
-        stacks[self.from - 1].truncate(f.len() - self.count);
+    fn execute_p1(&self, stacks: &mut [Vec<&str>]) {
+        for _ in 0..self.count {
+            let val = stacks[self.from - 1].pop().unwrap();
+            stacks[self.to - 1].push(val);
+        }
+    }
+
+    fn execute_p2(&self, stacks: &mut [Vec<&str>]) {
+        let offset = stacks[self.from - 1].len() - self.count;
+        let mut moving = stacks[self.from - 1].drain(offset..).collect_vec();
+        stacks[self.to - 1].append(&mut moving);
     }
 }
 
@@ -34,15 +41,23 @@ fn main(input: &str) -> (String, String) {
         })
         .collect_vec();
     
-    for op in ops {
-        op.execute(&mut stacks);
+    let mut stacks_p1 = stacks.clone();
+
+    for op in &ops {
+        op.execute_p1(&mut stacks_p1)
     }
 
-    let p1 = "QMBMJDFTD".to_string();
+    let p1 = stacks_p1.iter()
+        .map(|stack| stack.last().unwrap())
+        .join("");
+
+    for op in ops {
+        op.execute_p2(&mut stacks);
+    }
 
     let p2 = stacks.iter()
         .map(|stack| stack.last().unwrap())
-        .fold("".to_string(), |acc, &x| format!("{acc}{x}"));
+        .join("");
 
     (p1, p2)
 }
