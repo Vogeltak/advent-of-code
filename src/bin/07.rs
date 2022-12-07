@@ -41,5 +41,13 @@ fn main(input: &str) -> (i64, i64) {
         .filter(|&&size| size <= 100_000)
         .sum();
 
-    (p1, 0)
+    let total_unused = 70_000_000 - dirs[&PathBuf::from("/")];
+
+    let p2 = dirs.values()
+        .filter(|&&size| total_unused + size >= 30_000_000) 
+        .min()
+        .copied()
+        .unwrap();
+
+    (p1, p2)
 }
