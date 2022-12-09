@@ -29,8 +29,8 @@ impl TryFrom<&str> for Move {
     }
 }
 
-fn simulate_rope(moves: &[Move]) -> usize {
-    let mut rope = vec![(0i32, 0i32); 2];
+fn simulate_rope(moves: &[Move], tail: usize) -> usize {
+    let mut rope = vec![(0i32, 0i32); tail + 1];
     let mut visited = HashSet::new();
 
     visited.insert((0, 0));
@@ -38,12 +38,14 @@ fn simulate_rope(moves: &[Move]) -> usize {
     for m in moves {
         for _ in 0..m.steps {
             rope[0] = (rope[0].0 + m.direction.0, rope[0].1 + m.direction.1);
-            let (dx, dy) = (rope[0].0 - rope[1].0, rope[0].1 - rope[1].1);
-            if dx.abs() > 1 || dy.abs() > 1 {
-                rope[1].0 += dx.signum();
-                rope[1].1 += dy.signum();
+            for i in 1..rope.len() {
+                let (dx, dy) = (rope[i-1].0 - rope[i].0, rope[i-1].1 - rope[i].1);
+                if dx.abs() > 1 || dy.abs() > 1 {
+                    rope[i].0 += dx.signum();
+                    rope[i].1 += dy.signum();
+                }
             }
-            visited.insert(rope[1]);
+            visited.insert(rope[tail]);
         }
     }
 
@@ -57,5 +59,5 @@ fn main(input: &str) -> (usize, usize) {
         .map(|l| Move::try_from(l).unwrap())
         .collect_vec();
 
-    (simulate_rope(&input), 0)
+    (simulate_rope(&input, 1), simulate_rope(&input, 9))
 }
