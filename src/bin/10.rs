@@ -1,38 +1,33 @@
-use itertools::Itertools;
-use itertools::FoldWhile::{Continue, Done};
-
 #[aoc::main(10)]
-fn main(input: &str) -> (i32, i32) {
+fn main(input: &str) -> (i32, String) {
     let mut instructions = input
         .lines()
         .map(|l| l.split_once(' ').map(|(_, i)| i.parse::<i32>().unwrap()))
         .cycle();
 
-    let p1 = instructions
-        .fold_while((1, 1, 0), |(mut cycle, mut rx, mut sig), i| {
-            if [20, 60, 100, 140, 180, 220].contains(&cycle) {
-                sig += cycle * rx;
-                println!("{} * {} = {}", cycle, rx, cycle*rx);
-            }
+    let (mut rx, mut add) = (1, None);
+    let (mut p1, mut p2) = (0, String::new());
 
-            match i {
-                Some(val) => {
-                    cycle += 1;
-                    if [20, 60, 100, 140, 180, 220].contains(&cycle) {
-                        sig += cycle * rx;
-                        println!("{} * {} = {}", cycle, rx, cycle*rx);
-                    }
-                    cycle += 1;
-                    rx += val;
-                },
-                None => cycle += 1,
-            }
+    for cycle in 1..240 {
+        if [20, 60, 100, 140, 180, 220].contains(&cycle) {
+            p1 += cycle * rx;
+        }
 
-            match cycle {
-                0..=240 => Continue((cycle, rx, sig)),
-                _ => Done((cycle, rx, sig)),
-            }
-        }).into_inner().2;
+        let y = (cycle - 1) % 40;
+        if y == 0 {
+            p2.push('\n');
+        }
+        if ((rx - y) as i32).abs() < 2 {
+            p2.push('█');
+        } else {
+            p2.push(' ');
+        }
 
-    (p1, 0)
+        match add.take() {
+            Some(v) => rx += v,
+            None => add = instructions.next().unwrap(),
+        }
+    }
+
+    (p1, p2)
 }
