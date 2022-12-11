@@ -1,18 +1,21 @@
 use std::{convert::TryFrom, ops::{Add, Mul}};
+use std::rc::Rc;
 
 use itertools::Itertools;
 
-struct Monkey {
-    items: Vec<i32>,
-    op: Box<dyn Fn(i32) -> i32>,
-    test: Box<dyn Fn(i32) -> usize>,
-    inspections: usize,
+enum Op {
+    Add(u64),
+    Mul(u64),
+    Special,
 }
 
-enum Op {
-    Add(i32),
-    Mul(i32),
-    Special,
+#[derive(Clone)]
+struct Monkey {
+    items: Vec<u64>,
+    op: Rc<dyn Fn(u64) -> u64>,
+    divisor: u64,
+    test: Rc<dyn Fn(u64) -> usize>,
+    inspections: usize,
 }
 
 impl TryFrom<&str> for Monkey {
@@ -27,7 +30,7 @@ impl TryFrom<&str> for Monkey {
             .trim()
             .strip_prefix("Starting items: ").unwrap()
             .split(", ")
-            .map(|i| i.parse::<i32>().unwrap())
+            .map(|i| i.parse::<u64>().unwrap())
             .collect_vec();
 
         let (operator, operand) = lines
@@ -37,15 +40,15 @@ impl TryFrom<&str> for Monkey {
             .split_once(' ').unwrap();
 
         let op_enum = match operator {
-            "+" => Op::Add(operand.parse::<i32>().unwrap()),
-            "*" => match operand.parse::<i32>() { 
+            "+" => Op::Add(operand.parse::<u64>().unwrap()),
+            "*" => match operand.parse::<u64>() {
                 Ok(i) => Op::Mul(i),
                 Err(_e) => Op::Special,
             }
             _ => unreachable!(),
         };
 
-        let op = Box::new(move |lhs: i32| -> i32 {
+        let op = Rc::new(move |lhs: u64| -> u64 {
             match op_enum {
                 Op::Add(x) => lhs.add(x),
                 Op::Mul(x) => lhs.mul(x),
@@ -53,7 +56,7 @@ impl TryFrom<&str> for Monkey {
             }
         });
 
-        let divisor: i32 = lines
+        let divisor: u64 = lines
             .next().unwrap()
             .trim()
             .strip_prefix("Test: divisible by ").unwrap()
@@ -71,7 +74,7 @@ impl TryFrom<&str> for Monkey {
             .strip_prefix("If false: throw to monkey ").unwrap()
             .parse()?;
 
-        let test = Box::new(move |item: i32| -> usize {
+        let test = Rc::new(move |item: u64| -> usize {
             match item % divisor {
                 0 => monkey_true,
                 _ => monkey_false,
@@ -81,6 +84,7 @@ impl TryFrom<&str> for Monkey {
         Ok(Self {
             items: starting_items,
             op,
+            divisor,
             test,
             inspections: 0,
         })
@@ -90,10 +94,10 @@ impl TryFrom<&str> for Monkey {
 impl Monkey {
     // Return type:
     // Throw item with worry level a to monkey b
-    fn inspect_item(&mut self) -> Option<(i32, usize)> {
+    fn inspect_item(&mut self, manage_worry: impl Fn(u64) -> u64) -> Option<(u64, usize)> {
         if let Some(i) = self.items.pop() {
             self.inspections += 1;
-            let i = (self.op)(i) / 3;
+            let i = manage_worry((self.op)(i));
             Some((i, (self.test)(i)))
         } else {
             None
@@ -101,29 +105,36 @@ impl Monkey {
     }
 }
 
-#[aoc::main(11)]
-fn main(input: &str) -> (usize, usize) {
-    let mut monkeys = input
-        .split("\n\n")
-        .map(|m| Monkey::try_from(m).unwrap())
-        .collect_vec();
-
-    // Simulate all 20 rounds
-    for _ in 0..20 {
+fn simulate(mut monkeys: Vec<Monkey>, rounds: usize, f: impl Fn(u64) -> u64) -> usize {
+    for _ in 0..rounds {
         for m in 0..monkeys.len() {
-            while let Some((i, to)) = monkeys[m].inspect_item() {
+            while let Some((i, to)) = monkeys[m].inspect_item(&f) {
                 monkeys[to].items.push(i);
             }
         }
     }
 
-    let p1 = monkeys
+    monkeys
         .iter()
         .map(|m| m.inspections)
         .sorted()
         .rev()
         .take(2)
-        .product();
+        .product()
 
-    (p1, 0)
+}
+
+#[aoc::main(11)]
+fn main(input: &str) -> (usize, usize) {
+    let monkeys = input
+        .split("\n\n")
+        .map(|m| Monkey::try_from(m).unwrap())
+        .collect_vec();
+
+    let sqd = monkeys.iter().map(|m| m.divisor).product::<u64>();
+
+    let p1 = simulate(monkeys.clone(), 20, |i| i / 3);
+    let p2 = simulate(monkeys, 10000, |i| i % sqd);
+
+    (p1, p2)
 }
