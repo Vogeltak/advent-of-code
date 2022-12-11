@@ -26,38 +26,36 @@ impl Operation {
 fn main(input: &str) -> (String, String) {
     let (stacks, ops) = input.split_once("\n\n").unwrap();
 
-    let mut stacks = stacks.lines()
+    let mut stacks = stacks
+        .lines()
         .map(|l| l.split_ascii_whitespace().collect_vec())
         .collect_vec();
 
-    let ops = ops.lines()
+    let ops = ops
+        .lines()
         .map(|l| {
             let (x, y, z) = l.split_ascii_whitespace().next_tuple().unwrap();
-            Operation{
+            Operation {
                 count: x.parse().unwrap(),
                 from: y.parse().unwrap(),
                 to: z.parse().unwrap(),
             }
         })
         .collect_vec();
-    
+
     let mut stacks_p1 = stacks.clone();
 
     for op in &ops {
         op.execute_p1(&mut stacks_p1)
     }
 
-    let p1 = stacks_p1.iter()
-        .map(|stack| stack.last().unwrap())
-        .join("");
+    let p1 = stacks_p1.iter().map(|stack| stack.last().unwrap()).join("");
 
     for op in ops {
         op.execute_p2(&mut stacks);
     }
 
-    let p2 = stacks.iter()
-        .map(|stack| stack.last().unwrap())
-        .join("");
+    let p2 = stacks.iter().map(|stack| stack.last().unwrap()).join("");
 
     (p1, p2)
 }

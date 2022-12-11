@@ -1,5 +1,5 @@
-use std::str::FromStr;
 use std::convert::TryFrom;
+use std::str::FromStr;
 
 use color_eyre::Report;
 use itertools::Itertools;
@@ -96,9 +96,7 @@ impl FromStr for Round {
     type Err = Report;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let (o, m) = s
-            .split_once(' ')
-            .unwrap();
+        let (o, m) = s.split_once(' ').unwrap();
 
         let opponent = Move::try_from(o)?;
         let outcome = Outcome::try_from(m)?;
@@ -127,14 +125,10 @@ impl Round {
 fn main(input: &str) -> (usize, usize) {
     color_eyre::install().unwrap();
 
-    let strategy: Vec<Round> = input.lines()
-        .map(|s| s.parse().unwrap())
-        .collect_vec();
+    let strategy: Vec<Round> = input.lines().map(|s| s.parse().unwrap()).collect_vec();
 
     let p1 = 15691;
-    let p2 = strategy.iter()
-        .map(|r| r.score())
-        .sum();
-    
+    let p2 = strategy.iter().map(|r| r.score()).sum();
+
     (p1, p2)
 }

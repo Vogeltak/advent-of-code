@@ -39,7 +39,7 @@ fn simulate_rope(moves: &[Move], tail: usize) -> usize {
         for _ in 0..m.steps {
             rope[0] = (rope[0].0 + m.direction.0, rope[0].1 + m.direction.1);
             for i in 1..rope.len() {
-                let (dx, dy) = (rope[i-1].0 - rope[i].0, rope[i-1].1 - rope[i].1);
+                let (dx, dy) = (rope[i - 1].0 - rope[i].0, rope[i - 1].1 - rope[i].1);
                 if dx.abs() > 1 || dy.abs() > 1 {
                     rope[i].0 += dx.signum();
                     rope[i].1 += dy.signum();

@@ -8,15 +8,15 @@ fn main(input: &str) -> (usize, usize) {
             "" => {
                 elves.push(elf);
                 elf = 0;
-            },
+            }
             c => elf += c.parse::<usize>().unwrap(),
         }
     }
 
     elves.push(elf);
 
-    elves.sort_by(|a,b| b.cmp(a));
-    
+    elves.sort_by(|a, b| b.cmp(a));
+
     let p1 = elves[0];
     let p2 = elves.iter().take(3).sum();
 

@@ -14,15 +14,17 @@ fn same_char(a: &str, b: &str) -> Vec<char> {
 
 #[aoc::main(03)]
 fn main(input: &str) -> (usize, usize) {
-    let p1 = input.lines()
+    let p1 = input
+        .lines()
         .map(|line| line.split_at(line.len() / 2))
-        .map(|(a,b)| same_char(a, b))
+        .map(|(a, b)| same_char(a, b))
         .map(|c| value(c[0]))
         .sum();
 
-    let p2 = input.lines()
+    let p2 = input
+        .lines()
         .tuples()
-        .map(|(a,b,c)| same_char(a, same_char(b, c).iter().collect::<String>().as_str()))
+        .map(|(a, b, c)| same_char(a, same_char(b, c).iter().collect::<String>().as_str()))
         .map(|c| value(c[0]))
         .sum();
 

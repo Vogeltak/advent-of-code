@@ -1,11 +1,14 @@
 use std::collections::HashSet;
 
 fn find_marker(input: &str, size: usize) -> usize {
-    input.as_bytes()
+    input
+        .as_bytes()
         .windows(size)
         .enumerate()
         .find(|(_, window)| HashSet::<&u8>::from_iter(window.iter()).len() == size)
-        .unwrap().0 + size
+        .unwrap()
+        .0
+        + size
 }
 
 #[aoc::main(06)]

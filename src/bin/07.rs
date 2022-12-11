@@ -18,18 +18,16 @@ fn main(input: &str) -> (i64, i64) {
                 } else {
                     wd.push(dir);
                 }
-            },
-            2 => {
-                match (cmd[0], cmd[1]) {
-                    ("$", "ls") => continue,
-                    ("dir", _) => continue,
-                    (size, _) => {
-                        let size = size.parse::<i64>().unwrap();
-                        for dir in wd.as_path().ancestors() {
-                            dirs.entry(dir.to_path_buf().clone())
-                                .and_modify(|n| *n += size)
-                                .or_insert(size);
-                        }
+            }
+            2 => match (cmd[0], cmd[1]) {
+                ("$", "ls") => continue,
+                ("dir", _) => continue,
+                (size, _) => {
+                    let size = size.parse::<i64>().unwrap();
+                    for dir in wd.as_path().ancestors() {
+                        dirs.entry(dir.to_path_buf().clone())
+                            .and_modify(|n| *n += size)
+                            .or_insert(size);
                     }
                 }
             },
@@ -37,14 +35,13 @@ fn main(input: &str) -> (i64, i64) {
         }
     }
 
-    let p1 = dirs.values()
-        .filter(|&&size| size <= 100_000)
-        .sum();
+    let p1 = dirs.values().filter(|&&size| size <= 100_000).sum();
 
     let total_unused = 70_000_000 - dirs[&PathBuf::from("/")];
 
-    let p2 = dirs.values()
-        .filter(|&&size| total_unused + size >= 30_000_000) 
+    let p2 = dirs
+        .values()
+        .filter(|&&size| total_unused + size >= 30_000_000)
         .min()
         .copied()
         .unwrap();
