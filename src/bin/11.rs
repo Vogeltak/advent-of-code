@@ -1,5 +1,8 @@
-use std::{convert::TryFrom, ops::{Add, Mul}};
 use std::rc::Rc;
+use std::{
+    convert::TryFrom,
+    ops::{Add, Mul},
+};
 
 use itertools::Itertools;
 
@@ -26,25 +29,30 @@ impl TryFrom<&str> for Monkey {
         let mut lines = value.lines().skip(1);
 
         let starting_items = lines
-            .next().unwrap()
+            .next()
+            .unwrap()
             .trim()
-            .strip_prefix("Starting items: ").unwrap()
+            .strip_prefix("Starting items: ")
+            .unwrap()
             .split(", ")
             .map(|i| i.parse::<u64>().unwrap())
             .collect_vec();
 
         let (operator, operand) = lines
-            .next().unwrap()
+            .next()
+            .unwrap()
             .trim()
-            .strip_prefix("Operation: new = old ").unwrap()
-            .split_once(' ').unwrap();
+            .strip_prefix("Operation: new = old ")
+            .unwrap()
+            .split_once(' ')
+            .unwrap();
 
         let op_enum = match operator {
             "+" => Op::Add(operand.parse::<u64>().unwrap()),
             "*" => match operand.parse::<u64>() {
                 Ok(i) => Op::Mul(i),
                 Err(_e) => Op::Special,
-            }
+            },
             _ => unreachable!(),
         };
 
@@ -57,21 +65,27 @@ impl TryFrom<&str> for Monkey {
         });
 
         let divisor: u64 = lines
-            .next().unwrap()
+            .next()
+            .unwrap()
             .trim()
-            .strip_prefix("Test: divisible by ").unwrap()
+            .strip_prefix("Test: divisible by ")
+            .unwrap()
             .parse()?;
-        
+
         let monkey_true = lines
-            .next().unwrap()
+            .next()
+            .unwrap()
             .trim()
-            .strip_prefix("If true: throw to monkey ").unwrap()
+            .strip_prefix("If true: throw to monkey ")
+            .unwrap()
             .parse()?;
 
         let monkey_false = lines
-            .next().unwrap()
+            .next()
+            .unwrap()
             .trim()
-            .strip_prefix("If false: throw to monkey ").unwrap()
+            .strip_prefix("If false: throw to monkey ")
+            .unwrap()
             .parse()?;
 
         let test = Rc::new(move |item: u64| -> usize {
@@ -121,7 +135,6 @@ fn simulate(mut monkeys: Vec<Monkey>, rounds: usize, f: impl Fn(u64) -> u64) -> 
         .rev()
         .take(2)
         .product()
-
 }
 
 #[aoc::main(11)]
