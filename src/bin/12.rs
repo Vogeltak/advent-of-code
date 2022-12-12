@@ -26,15 +26,17 @@ fn bfs(grid: &[Vec<u8>], start: (usize, usize), end: (usize, usize)) -> Option<u
 
 #[aoc::main(12)]
 fn main(input: &str) -> (usize, usize) {
-     let mut grid = input
+    let mut grid = input
         .lines()
         .map(|l| l.as_bytes().iter().copied().collect_vec())
         .collect_vec();
 
-    let (sx, sy) = (0..grid.len()).cartesian_product(0..grid[0].len())
+    let (sx, sy) = (0..grid.len())
+        .cartesian_product(0..grid[0].len())
         .find(|&(x, y)| grid[x][y] == b'S')
         .unwrap();
-    let (ex, ey) = (0..grid.len()).cartesian_product(0..grid[0].len())
+    let (ex, ey) = (0..grid.len())
+        .cartesian_product(0..grid[0].len())
         .find(|&(x, y)| grid[x][y] == b'E')
         .unwrap();
 
@@ -43,7 +45,8 @@ fn main(input: &str) -> (usize, usize) {
 
     let p1 = bfs(&grid, (sx, sy), (ex, ey)).unwrap();
 
-    let p2 = (0..grid.len()).cartesian_product(0..grid[0].len())
+    let p2 = (0..grid.len())
+        .cartesian_product(0..grid[0].len())
         .filter(|&(x, y)| grid[x][y] == b'a')
         .filter_map(|start| bfs(&grid, start, (ex, ey)))
         .min()
