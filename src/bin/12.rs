@@ -41,7 +41,13 @@ fn main(input: &str) -> (usize, usize) {
     grid[sx][sy] = b'a';
     grid[ex][ey] = b'z';
 
-    let p1 = bfs(&grid, (sx, sy), (ex, ey));
+    let p1 = bfs(&grid, (sx, sy), (ex, ey)).unwrap();
 
-    (p1.unwrap(), 0)
+    let p2 = (0..grid.len()).cartesian_product(0..grid[0].len())
+        .filter(|&(x, y)| grid[x][y] == b'a')
+        .filter_map(|start| bfs(&grid, start, (ex, ey)))
+        .min()
+        .unwrap();
+
+    (p1, p2)
 }
