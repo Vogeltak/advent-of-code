@@ -1,4 +1,4 @@
-use std::cmp::{Ordering, max};
+use std::cmp::{max, Ordering};
 
 use itertools::Itertools;
 use serde_json::Value;
@@ -12,13 +12,13 @@ fn compare(left: &Value, right: &Value) -> Ordering {
                     (None, _) => return Ordering::Less,
                     (_, None) => return Ordering::Greater,
                     (Some(x), Some(y)) => match compare(x, y) {
-                        Ordering::Equal => {},
+                        Ordering::Equal => {}
                         c => return c,
-                    }
+                    },
                 }
             }
             Ordering::Equal
-        },
+        }
         (Value::Number(_), Value::Array(_)) => compare(&Value::Array(vec![left.clone()]), right),
         (Value::Array(_), Value::Number(_)) => compare(left, &Value::Array(vec![right.clone()])),
         _ => unreachable!(),
@@ -29,7 +29,11 @@ fn compare(left: &Value, right: &Value) -> Ordering {
 fn main(input: &str) -> (usize, usize) {
     let pairs = input
         .split("\n\n")
-        .map(|pair| pair.lines().map(|p| serde_json::from_str::<Value>(p).unwrap()).collect_vec())
+        .map(|pair| {
+            pair.lines()
+                .map(|p| serde_json::from_str::<Value>(p).unwrap())
+                .collect_vec()
+        })
         .collect_vec();
 
     let p1 = pairs
@@ -37,16 +41,13 @@ fn main(input: &str) -> (usize, usize) {
         .positions(|p| compare(&p[0], &p[1]) == Ordering::Less)
         .map(|i| i + 1)
         .sum();
-    
+
     let dividers = [
         serde_json::from_str::<Value>("[[2]]").unwrap(),
         serde_json::from_str::<Value>("[[6]]").unwrap(),
     ];
 
-    let mut pairs = pairs
-        .iter()
-        .flatten()
-        .collect_vec();
+    let mut pairs = pairs.iter().flatten().collect_vec();
 
     pairs.extend(dividers.iter());
     pairs.sort_by(|a, b| compare(a, b));
