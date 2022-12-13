@@ -38,5 +38,24 @@ fn main(input: &str) -> (usize, usize) {
         .map(|i| i + 1)
         .sum();
     
-    (p1, 0)
+    let dividers = [
+        serde_json::from_str::<Value>("[[2]]").unwrap(),
+        serde_json::from_str::<Value>("[[6]]").unwrap(),
+    ];
+
+    let mut pairs = pairs
+        .iter()
+        .flatten()
+        .collect_vec();
+
+    pairs.extend(dividers.iter());
+    pairs.sort_by(|a, b| compare(a, b));
+
+    let p2 = pairs
+        .iter()
+        .positions(|p| dividers.contains(p))
+        .map(|i| i + 1)
+        .product();
+
+    (p1, p2)
 }
