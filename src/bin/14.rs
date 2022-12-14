@@ -19,11 +19,11 @@ fn print_cave(cave: &[Vec<bool>], left: usize, right: usize, height: usize) {
     }
 }
 
-fn simulate(mut cave: Vec<Vec<bool>>, abyss: usize) -> Result<usize> {
+fn simulate(mut cave: Vec<Vec<bool>>, floor: usize, breaking_point: usize) -> Result<usize> {
     for sand in 0.. {
         let (mut x, mut y) = (500, 0);
 
-        while y < abyss {
+        while y + 1 < floor {
             let Some(&dx) = [0, -1, 1]
                 .iter()
                 .find(|&&dx| {
@@ -34,7 +34,7 @@ fn simulate(mut cave: Vec<Vec<bool>>, abyss: usize) -> Result<usize> {
             y += 1;
         }
 
-        if y == abyss {
+        if y == breaking_point {
             return Ok(sand);
         }
         cave[x][y] = true;
@@ -76,9 +76,10 @@ fn main(input: &str) -> (usize, usize) {
         }
     }
 
-    // print_cave(&cave, boundary_left, boundary_right, max_y);
+    print_cave(&cave, boundary_left, boundary_right, max_y);
 
-    let p1 = simulate(cave.clone(), max_y + 1).unwrap();
+    let p1 = simulate(cave.clone(), max_y + 2, max_y + 1).unwrap();
+    let p2 = simulate(cave, max_y + 2, 0).unwrap() + 1;
 
-    (p1, 0)
+    (p1, p2)
 }
