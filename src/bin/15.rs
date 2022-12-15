@@ -62,13 +62,10 @@ fn main(input: &str) -> (usize, usize) {
 
     let p1 = (left..=right)
         .map(|x| {
-            for s in &sensors {
-                if s.pos_cannot_contain_beacon(x, 2_000_000) {
-                    return true;
-                }
-            }
-
-            false
+            sensors
+                .iter()
+                .map(|s| s.pos_cannot_contain_beacon(x, 2_000_000))
+                .any(|x| x)
         })
         .filter(|&x| x)
         .count();
