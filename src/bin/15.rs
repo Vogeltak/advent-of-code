@@ -39,6 +39,23 @@ impl Sensor {
 
         self.manhattan_distance(x, y) <= self.manhattan
     }
+
+    fn get_border_tiles(&self) -> Vec<(i32, i32)> {
+        let mut border: Vec<(i32, i32)> = vec![];
+
+        for (dx, dy) in [(-1, -1), (-1, 1), (1, -1), (1, 1)] {
+            for dist in 0..self.manhattan {
+                let bx = self.x + dx * dist as i32;
+                let by = self.y + dy * (self.manhattan + 1 - dist) as i32;
+                if bx < 0 || by < 0 || bx > 4_000_000 || by > 4_000_000 {
+                    break;
+                }
+                border.push((bx, by));
+            }
+        }
+
+        border
+    }
 }
 
 #[aoc::main(15)]
@@ -70,5 +87,16 @@ fn main(input: &str) -> (usize, usize) {
         .filter(|&x| x)
         .count();
 
-    (p1, 0)
+    let mut p2 = 0;
+
+    for s in &sensors {
+        for (x, y) in s.get_border_tiles() {
+            if sensors.iter().all(|s| s.manhattan_distance(x, y) >= s.manhattan) {
+                p2 = x as usize * 4_000_000 + y as usize;
+                break;
+            }
+        }
+    }
+
+    (p1, p2)
 }
