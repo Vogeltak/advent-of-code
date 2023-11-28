@@ -1,13 +1,14 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, AttributeArgs, Ident, ItemFn, Lit, NestedMeta};
+use syn::{parse_macro_input, Ident, ItemFn, LitInt};
 
 #[proc_macro_attribute]
 pub fn main(args: TokenStream, input: TokenStream) -> TokenStream {
-    let input_path = match &parse_macro_input!(args as AttributeArgs)[..] {
-        [NestedMeta::Lit(Lit::Int(day))] => format!("../../inputs/{}.in", day.token()),
-        _ => panic!("Expected one integer argument"),
-    };
+    let day = parse_macro_input!(args as LitInt)
+        .base10_parse::<u8>()
+        .expect("integer argument");
+
+    let input_path = format!("../../inputs/{day:02}.in");
 
     let mut aoc_solution = parse_macro_input!(input as ItemFn);
     aoc_solution.sig.ident = Ident::new("aoc_solution", aoc_solution.sig.ident.span());
