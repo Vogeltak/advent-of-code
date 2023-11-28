@@ -1,12 +1,6 @@
-# Advent of code, 2022
+# Advent of Code
 
-These are my solutions to the 2022 edition of [Advent of Code](https://adventofcode.com).
+This repository collects all my solutions to the programming puzzles from [Advent of Code](https://adventofcode.com/) over multiple years.
 
-## Usage
-```sh
-cargo run --release --bin DAY # run a specific day
-cargo run --release           # run all days
-```
-
-## Acknowledgements
-The Rust boilerplate is based on Axel Lindeberg's [2021 entry](https://github.com/AxlLind/AdventOfCode2021).
+- [2022](2022/): 15 out of 25
+- [2023](2023/)
