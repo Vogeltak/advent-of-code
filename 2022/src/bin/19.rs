@@ -62,7 +62,7 @@ impl State {
                 self.ore_bots += 1;
             }
             BotType::Clay => {
-                self.ore -= bp.ore_bot_ore_cost;
+                self.ore -= bp.clay_bot_ore_cost;
                 self.clay_bots += 1;
             }
             BotType::Obsidian => {
@@ -90,16 +90,12 @@ impl State {
             // enough to spend every minute to build any bot we want.
             match bot {
                 Ore => {
-                    if &self.ore_bots
-                        >= [
-                            bp.ore_bot_ore_cost,
-                            bp.clay_bot_ore_cost,
-                            bp.obsidian_bot_ore_cost,
-                            bp.geode_bot_ore_cost,
-                        ]
-                        .iter()
-                        .max()
-                        .unwrap()
+                    if self.ore_bots
+                        >= bp
+                            .ore_bot_ore_cost
+                            .max(bp.clay_bot_ore_cost)
+                            .max(bp.obsidian_bot_ore_cost)
+                            .max(bp.geode_bot_ore_cost)
                     {
                         continue;
                     }
@@ -153,9 +149,9 @@ struct Blueprint {
     geode_bot_obsidian_cost: u64,
 }
 
-fn bfs(bp: &Blueprint) -> u64 {
+fn bfs(bp: &Blueprint, minutes: u8) -> u64 {
     let mut q = VecDeque::new();
-    q.push_back(State::new(24));
+    q.push_back(State::new(minutes));
     let mut seen = HashSet::new();
     let mut max_geodes = 0;
 
@@ -166,7 +162,31 @@ fn bfs(bp: &Blueprint) -> u64 {
             continue;
         }
 
-        for new_state in state.expand(bp) {
+        // Prune if state cannot beat current max heuristically
+        let termial: u64 = (0..state.time_left as u64)
+            .map(|x| x + state.geode_bots)
+            .sum();
+        if state.geodes + termial <= max_geodes {
+            continue;
+        }
+
+        for mut new_state in state.expand(bp) {
+            // Reduce state growth by capping resource count
+            let x = new_state.time_left as u64
+                * bp.ore_bot_ore_cost
+                    .max(bp.clay_bot_ore_cost)
+                    .max(bp.obsidian_bot_ore_cost)
+                    .max(bp.geode_bot_ore_cost)
+                - new_state.ore_bots * ((new_state.time_left as u64).checked_sub(1).unwrap_or(0));
+            new_state.ore = new_state.ore.min(x);
+            let x = new_state.time_left as u64 * bp.obsidian_bot_clay_cost
+                - new_state.clay_bots * ((new_state.time_left as u64).checked_sub(1).unwrap_or(0));
+            new_state.clay = new_state.clay.min(x);
+            let x = new_state.time_left as u64 * bp.geode_bot_obsidian_cost
+                - new_state.obsidian_bots
+                    * ((new_state.time_left as u64).checked_sub(1).unwrap_or(0));
+            new_state.obsidian = new_state.obsidian.min(x);
+
             if !seen.contains(&new_state) {
                 q.push_back(new_state.clone());
                 seen.insert(new_state);
@@ -174,13 +194,18 @@ fn bfs(bp: &Blueprint) -> u64 {
         }
     }
 
-    println!("BP #{:02}: {:2} geodes", bp.id, max_geodes);
+    println!(
+        "BP #{:02}: {:2} geodes (eval {} states)",
+        bp.id,
+        max_geodes,
+        seen.len()
+    );
 
     max_geodes
 }
 
 #[aoc::main(19)]
-fn main(input: &str) -> (u64, usize) {
+fn main(input: &str) -> (u64, u64) {
     // Read blueprints into list
     let re = Regex::new(r"^Blueprint (\d+): Each ore robot costs (\d+) ore. Each clay robot costs (\d+) ore. Each obsidian robot costs (\d+) ore and (\d+) clay. Each geode robot costs (\d+) ore and (\d+) obsidian.$").unwrap();
     let blueprints = input
@@ -220,7 +245,15 @@ fn main(input: &str) -> (u64, usize) {
         .collect::<Vec<_>>();
 
     // Sequentially bfs
-    let p1 = blueprints.par_iter().map(|bp| bfs(bp) * bp.id).sum();
+    println!("part 1");
+    let p1 = blueprints.par_iter().map(|bp| bfs(bp, 24) * bp.id).sum();
+    println!("part 2");
+    let p2 = blueprints
+        .iter()
+        .take(3)
+        .par_bridge()
+        .map(|bp| bfs(bp, 32))
+        .product();
 
-    (p1, 0)
+    (p1, p2)
 }
