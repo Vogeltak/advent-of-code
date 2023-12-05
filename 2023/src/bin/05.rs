@@ -15,25 +15,33 @@ impl Map {
     }
 
     fn convert_range(&self, x: (u64, u64)) -> Vec<(u64, u64)> {
-        self.rules.iter().map(|&(d, s, r)| {
-            let mut out = vec![];
-            // [x.0                                   x.1)
-            //          [s           s+r+1]
-            // [BEFORE ][INTER            ][AFTER        )
-            let before = (x.0, x.1.min(s));
-            let inter = (x.0.max(s), x.1.min(s + r));
-            let after = (x.0.max(s + r), x.1);
+        let mut mapped = vec![];
+        let mut unmapped = vec![x];
+        for (d, s, r) in self.rules.iter() {
+            let mut m = vec![];
+            for (start, end) in unmapped {
+                // [start                                 end)
+                //          [s           s+r+1]
+                // [BEFORE ][INTER            ][AFTER        )
+                let before = (start, end.min(*s));
+                let inter = (start.max(*s), end.min(s + r));
+                let after = (start.max(s + r), end);
 
-            if before.1 > before.0 {
-                out.push(before);
+                if before.1 > before.0 {
+                    m.push(before);
+                }
+                if inter.1 > inter.0 {
+                    mapped.push((inter.0 - s + d, inter.1 - s + d));
+                }
+                if after.1 > after.0 {
+                    m.push(after);
+                }
             }
-            if inter.1 > inter.0 {
-                out.push((inter.0 - s + d, inter.1 - s + d));
-            }
-            if after.1 > after.0 {
-                out.push(after);
-            }
-        })
+            unmapped = m;
+        }
+
+        mapped.extend(unmapped);
+        mapped
     }
 }
 
@@ -69,7 +77,7 @@ fn main(input: &str) -> (u64, u64) {
 
     let p1 = layers
         .iter()
-        .fold(seeds, |seeds, map| {
+        .fold(seeds.clone(), |seeds, map| {
             seeds.iter().map(|x| map.convert_single(*x)).collect()
         })
         .iter()
@@ -77,5 +85,21 @@ fn main(input: &str) -> (u64, u64) {
         .min()
         .unwrap();
 
-    (p1, 0)
+    let seeds = seeds.iter().cloned().tuples::<(_, _)>().collect_vec();
+
+    let p2 = layers
+        .iter()
+        .fold(seeds, |seeds, map| {
+            seeds
+                .iter()
+                .map(|x| map.convert_range(*x))
+                .flatten()
+                .collect_vec()
+        })
+        .iter()
+        .map(|r| r.0)
+        .min()
+        .unwrap();
+
+    (p1, p2)
 }
