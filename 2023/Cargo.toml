@@ -22,3 +22,4 @@ regex = "1.7.0"
 syn = { version = "2.0", features = ["full"] }
 quote = "1.0"
 anyhow = "1.0.75"
+gcd = "2.3.0"

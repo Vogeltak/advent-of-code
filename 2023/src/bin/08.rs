@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use anyhow::{anyhow, Result};
+use gcd::Gcd;
 use itertools::Itertools;
 
 #[derive(Clone, Debug)]
@@ -67,18 +68,33 @@ fn main(input: &str) -> (usize, usize) {
         })
         .collect();
 
-    let mut p1 = 0;
     let mut cur = NodeId("AAA".to_string());
     let goal = NodeId("ZZZ".to_string());
-    let _ = instructions
+    let p1 = instructions
         .iter()
         .cycle()
         .take_while(|&i| {
             cur = nodes.get(&cur).unwrap().follow(i);
-            p1 += 1;
             cur != goal
         })
-        .collect_vec();
+        .count();
 
-    (p1, 0)
+    let p2 = nodes
+        .keys()
+        .filter(|n| n.0.ends_with('A'))
+        .map(|n| {
+            let mut cur = n.clone();
+            instructions
+                .iter()
+                .cycle()
+                .take_while(|&i| {
+                    cur = nodes.get(&cur).unwrap().follow(i);
+                    !cur.0.ends_with('Z')
+                })
+                .count()
+                + 1
+        })
+        .fold(1, |acc, x| (acc * x) / acc.gcd(x));
+
+    (p1 + 1, p2)
 }
