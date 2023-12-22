@@ -132,8 +132,125 @@ impl From<&str> for Part {
     }
 }
 
+#[derive(Clone, Debug)]
+struct PartIntervals {
+    x: (usize, usize),
+    m: (usize, usize),
+    a: (usize, usize),
+    s: (usize, usize),
+}
+
+impl PartIntervals {
+    fn get(&self, operand: &str) -> (usize, usize) {
+        match operand {
+            "x" => self.x,
+            "m" => self.m,
+            "a" => self.a,
+            "s" => self.s,
+            _ => unreachable!(),
+        }
+    }
+
+    fn set(&mut self, operand: &str, val: (usize, usize)) {
+        match operand {
+            "x" => self.x = val,
+            "m" => self.m = val,
+            "a" => self.a = val,
+            "s" => self.s = val,
+            _ => unreachable!(),
+        }
+    }
+
+    fn count_parts(&self) -> usize {
+        [
+            self.x.1 - self.x.0 + 1,
+            self.m.1 - self.m.0 + 1,
+            self.a.1 - self.a.0 + 1,
+            self.s.1 - self.s.0 + 1,
+        ]
+        .iter()
+        .product()
+    }
+}
+
+impl Default for PartIntervals {
+    fn default() -> Self {
+        Self {
+            x: (1, 4000),
+            m: (1, 4000),
+            a: (1, 4000),
+            s: (1, 4000),
+        }
+    }
+}
+
+/// Calculates the intersection of two inclusive, closed intervals.
+fn interval_intersection(a: (usize, usize), b: (usize, usize)) -> Option<(usize, usize)> {
+    // Base case: no intersection at all
+    if a.1 < b.0 || a.0 > b.1 {
+        return None;
+    }
+
+    Some((a.0.max(b.0), a.1.min(b.1)))
+}
+
+fn count_accepted(
+    workflows: &HashMap<String, Workflow>,
+    dst: Dest,
+    mut ranges: PartIntervals,
+) -> usize {
+    match dst {
+        Dest::Rejected => 0,
+        Dest::Accepted => ranges.count_parts(),
+        Dest::Workflow(id) => {
+            let wf = workflows.get(&id).unwrap();
+            let mut accepted = 0;
+
+            for r in &wf.rules {
+                // Base case: just pointing to another workflow
+                if r.operand.is_none() && r.lt.is_none() && r.gt.is_none() {
+                    accepted += count_accepted(workflows, r.dst.clone(), ranges.clone());
+                    continue;
+                }
+
+                // Recursively follow workflows with part intervals conforming
+                // to their conditions.
+
+                let op_range = ranges.get(&r.operand.as_ref().unwrap());
+
+                let (t_range, f_range) = match (r.lt, r.gt) {
+                    (Some(x), None) => ((1, x as usize - 1), (x as usize, 4000)),
+                    (None, Some(x)) => ((x as usize + 1, 4000), (1, x as usize)),
+                    _ => unreachable!(),
+                };
+
+                accepted += match interval_intersection(op_range, t_range) {
+                    None => 0,
+                    Some(intersect) => {
+                        let mut new = ranges.clone();
+                        new.set(&r.operand.as_ref().unwrap(), intersect);
+                        count_accepted(workflows, r.dst.clone(), new)
+                    }
+                };
+
+                // Update the ranges after we've applied a rule, because the
+                // next rule may not include those that would have already
+                // been passed to an earlier workflow.
+                match interval_intersection(op_range, f_range) {
+                    None => break,
+                    Some(intersect) => {
+                        ranges.set(&r.operand.as_ref().unwrap(), intersect);
+                    }
+                }
+            }
+
+            accepted
+        }
+    }
+}
+
 #[aoc::main(19)]
-fn main(input: &str) -> (u32, u32) {
+fn main(input: &str) -> (u32, usize) {
     let (workflows, parts) = input.split_once("\n\n").unwrap();
     let workflows = workflows
         .lines()
@@ -163,5 +280,11 @@ fn main(input: &str) -> (u32, u32) {
         .map(|(p, _)| p.x + p.m + p.a + p.s)
         .sum();
 
-    (p1, 0)
+    let p2 = count_accepted(
+        &workflows,
+        Dest::Workflow("in".to_string()),
+        PartIntervals::default(),
+    );
+
+    (p1, p2)
 }
