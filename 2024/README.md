@@ -1,6 +1,6 @@
-# Advent of code, 2023
+# Advent of code, 2024
 
-These are my solutions to the 2023 edition of [Advent of Code](https://adventofcode.com).
+These are my solutions to the 2024 edition of [Advent of Code](https://adventofcode.com).
 
 ## Usage
 ```sh
