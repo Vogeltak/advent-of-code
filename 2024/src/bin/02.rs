@@ -33,7 +33,7 @@ impl Report {
 
 fn within_tolerance(levels: &[i16]) -> bool {
     let deltas = levels.windows(2).map(|s| s[0] - s[1]).collect_vec();
-    deltas.iter().all(|&d| d < 0 && d >= -3) || deltas.iter().all(|&d| d > 0 && d <= 3)
+    deltas.iter().all(|d| (-3..0).contains(d)) || deltas.iter().all(|d| (1..4).contains(d))
 }
 
 #[aoc::main(02)]
