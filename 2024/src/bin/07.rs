@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use itertools::Itertools;
+use rayon::prelude::*;
 
 #[derive(Clone)]
 enum Op {
@@ -9,13 +10,9 @@ enum Op {
     Concat,
 }
 
+#[inline]
 fn concat_digits(a: u64, b: u64) -> u64 {
-    [a.to_string().chars(), b.to_string().chars()]
-        .into_iter()
-        .flatten()
-        .join("")
-        .parse()
-        .unwrap()
+    (a.to_string() + &b.to_string()).parse().unwrap()
 }
 
 fn evaluate(parts: &[u64], ops: &[Op]) -> u64 {
@@ -40,7 +37,7 @@ fn dfs(test: u64, used: &[u64], left: &[u64], ops: &[Op], all_ops: bool) -> bool
         true => [Op::Add, Op::Multiply, Op::Concat].to_vec(),
         false => [Op::Add, Op::Multiply].to_vec(),
     };
-    op_candidates.into_iter().any(|op| {
+    op_candidates.into_par_iter().any(|op| {
         dfs(
             test,
             &[used, &[*i]].concat(),
@@ -67,17 +64,17 @@ fn main(input: &str) -> (usize, usize) {
         })
         .collect();
 
-    let p1 = equations
-        .iter()
-        .filter(|(test, parts)| dfs(**test, &[], parts, &[], false))
-        .map(|(test, _)| *test as usize)
-        .sum();
-
-    let p2 = equations
-        .iter()
-        .filter(|(test, parts)| dfs(**test, &[], parts, &[], true))
-        .map(|(test, _)| *test as usize)
-        .sum();
+    let (p1, p2) = [false, true]
+        .into_iter()
+        .map(|all_ops| {
+            equations
+                .iter()
+                .filter(|(test, parts)| dfs(**test, &[], parts, &[], all_ops))
+                .map(|(test, _)| *test as usize)
+                .sum()
+        })
+        .collect_tuple()
+        .unwrap();
 
     (p1, p2)
 }
