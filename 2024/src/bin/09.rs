@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 use itertools::Itertools;
 
 #[derive(Clone)]
@@ -23,9 +25,8 @@ fn compact(disk: &mut Vec<Block>, fragment: bool) {
 
         let (id, mut len) = (disk[i].id, disk[i].len);
 
-        loop {
-            if let Some(i_next_free) = disk[0..i].iter().position(|b| {
-                matches!(b.kind, BlockKind::Free)
+        while let Some(i_next_free) = disk[0..i].iter().position(|b| {
+            matches!(b.kind, BlockKind::Free)
                     // If we don't allow fragmentation, we only want to find
                     // blocks of free space that are large enough to contain
                     // our file in its entirety.
@@ -33,39 +34,22 @@ fn compact(disk: &mut Vec<Block>, fragment: bool) {
                         true => true,
                         false => b.len >= len,
                     }
-            }) {
-                let next_free = disk.get_mut(i_next_free).unwrap();
+        }) {
+            let next_free = disk.get_mut(i_next_free).unwrap();
 
-                // 1. file block fits exactly (easiest case), or
-                // 2. file block exceeds continuous free space
-                //    -> fill and adjust length
-                // 3. file block is smaller than available free space
-                //    -> change len of free space block we're using, and
-                //       insert file block at its position
+            // 1. file block fits exactly (easiest case), or
+            // 2. file block exceeds continuous free space
+            //    -> fill and adjust length
+            // 3. file block is smaller than available free space
+            //    -> change len of free space block we're using, and
+            //       insert file block at its position
 
-                // (1)
-                if len == next_free.len {
-                    next_free.id = id;
-                    next_free.kind = BlockKind::File;
-                    disk[i].kind = BlockKind::Free;
-
-                    // We've processed the complete file block,
-                    // therefore we can move on to the next one
-                    break;
-                }
-                // (2)
-                else if len > next_free.len {
-                    next_free.id = id;
-                    next_free.kind = BlockKind::File;
-                    len -= next_free.len;
-
-                    // We're not yet finished with this file block
-                }
+            match len.cmp(&next_free.len) {
                 // (3)
                 // We should never get to this option if we don't allow fragmentation,
                 // because our find operation wouldn't return Some(Block) if it
                 // doesn't have enough space to fit our file.
-                else {
+                Ordering::Less => {
                     next_free.len -= len;
                     disk.insert(
                         i_next_free,
@@ -85,13 +69,26 @@ fn compact(disk: &mut Vec<Block>, fragment: bool) {
                     // we can move on to the next one
                     break;
                 }
-            } else {
-                // There is no more free space left in between,
-                // so we're finished with the disk compaction
-                break;
+                // (1)
+                Ordering::Equal => {
+                    next_free.id = id;
+                    next_free.kind = BlockKind::File;
+                    disk[i].kind = BlockKind::Free;
+
+                    // We've processed the complete file block,
+                    // therefore we can move on to the next one
+                    break;
+                }
+                // (2)
+                Ordering::Greater => {
+                    next_free.id = id;
+                    next_free.kind = BlockKind::File;
+                    len -= next_free.len;
+
+                    // We're not yet finished with this file block
+                }
             }
         }
-
         i -= 1;
     }
 }
