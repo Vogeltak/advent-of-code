@@ -94,24 +94,16 @@ fn compact(disk: &mut Vec<Block>, fragment: bool) {
 }
 
 fn checksum(disk: &[Block]) -> usize {
-    let mut sum = 0;
-    let mut pos = 0;
-    for b in disk.iter() {
-        match b.kind {
-            // Skip blocks containing free space
-            BlockKind::Free => {
-                pos += b.len;
-            }
-            BlockKind::File => {
-                sum += (0..b.len)
-                    .map(|offset| (pos + offset) * b.id)
+    disk.iter()
+        .fold((0, 0), |(mut sum, pos), b| {
+            if matches!(b.kind, BlockKind::File) {
+                sum += (pos..pos + b.len)
+                    .map(|offset| offset * b.id)
                     .sum::<usize>();
-                pos += b.len;
             }
-        }
-    }
-
-    sum
+            (sum, pos + b.len)
+        })
+        .0
 }
 
 #[aoc::main(09)]
