@@ -25,7 +25,7 @@ fn towel_permutations_for_pattern<'a>(
         .filter(|t| pattern.starts_with(t))
         .map(|t| towel_permutations_for_pattern(&pattern[t.len()..], towels, cache))
         .sum();
-    cache.insert(&pattern, nr);
+    cache.insert(pattern, nr);
     nr
 }
 
