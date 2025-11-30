@@ -1,8 +1,9 @@
 [package]
 name = "aoc"
-authors = ["Max Crone"]
 version = "0.1.0"
+authors = ["Max Crone"]
 edition = "2024"
+default-run = "aoc"
 
 [lib]
 proc-macro = true
