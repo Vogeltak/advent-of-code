@@ -1,4 +1,7 @@
-use std::{cmp::Reverse, collections::HashSet};
+use std::{
+    cmp::Reverse,
+    collections::{HashSet, VecDeque},
+};
 
 use itertools::Itertools;
 use priority_queue::PriorityQueue;
@@ -140,22 +143,65 @@ fn dijkstra(map: &[Vec<Node>], mut unvisited: PriorityQueue<Node, Reverse<usize>
     // Find optimal paths by going backwards
     let end = visited.iter().find(|n| n.tile == Tile::End).unwrap();
     let mut best_paths = HashSet::new();
-    let mut current = end;
-    while let Some(prev) = visited.iter().find(|n| {
-        n.r == (current.r as isize - current.dir.as_ref().unwrap().dr()) as usize
-            && n.c == (current.c as isize - current.dir.as_ref().unwrap().dc()) as usize
-    }) {
-        best_paths.insert((prev.r, prev.c));
-        current = prev;
+    let mut q = VecDeque::new();
+    q.push_back(end);
+
+    while let Some(cur) = q.pop_front() {
+        best_paths.insert((cur.r, cur.c));
+
+        // Find any other neighbors that have equal score and push them to the queue
+        [(-1, 0), (1, 0), (0, -1), (0, 1)]
+            .iter()
+            .map(|(dr, dc)| {
+                (
+                    (
+                        (cur.r as isize - dr) as usize,
+                        (cur.c as isize - dc) as usize,
+                    ),
+                    Direction::from((*dr, *dc)),
+                )
+            })
+            .filter_map(|((rr, cc), dir)| {
+                visited
+                    .iter()
+                    .find(|n| n.r == rr && n.c == cc)
+                    .map(|n| (n, dir))
+            })
+            .filter(|(n, dir)| {
+                let cost_of_move = n.dir.as_ref().unwrap().cost_of_turning(dir);
+                n.score.as_ref().unwrap() + cost_of_move == *cur.score.as_ref().unwrap()
+            })
+            .for_each(|(n, _)| {
+                q.push_back(n);
+            });
     }
 
-    println!("found {} tiles on the best paths", best_paths.len());
+    println!(
+        "found {} tiles on the best paths:\n{:?}",
+        best_paths.len(),
+        best_paths
+    );
 
     end.score.unwrap()
 }
 
 #[aoc::main(16)]
 fn main(input: &str) -> (usize, usize) {
+    let input = "###############
+#.......#....E#
+#.#.###.#.###.#
+#.....#.#...#.#
+#.###.#####.#.#
+#.#.#.......#.#
+#.#.#####.###.#
+#...........#.#
+###.#.#####.#.#
+#...#.....#.#.#
+#.#.#.###.#.#.#
+#.....#...#.#.#
+#.###.#.#.#.#.#
+#S..#.....#...#
+###############";
     let mut unvisited = PriorityQueue::new();
     let map = input
         .lines()
