@@ -2,38 +2,20 @@ use itertools::Itertools;
 
 #[derive(Debug, Clone)]
 struct Range {
-    start: usize,
+    curr: usize,
     end: usize,
 }
 
 impl From<(&str, &str)> for Range {
     fn from(value: (&str, &str)) -> Self {
-        let start = value.0.parse().unwrap();
+        let curr = value.0.parse().unwrap();
         let end = value.1.parse().unwrap();
 
-        Self { start, end }
+        Self { curr, end }
     }
 }
 
-impl IntoIterator for Range {
-    type Item = usize;
-
-    type IntoIter = RangeIterator;
-
-    fn into_iter(self) -> Self::IntoIter {
-        RangeIterator {
-            curr: self.start,
-            end: self.end,
-        }
-    }
-}
-
-struct RangeIterator {
-    curr: usize,
-    end: usize,
-}
-
-impl Iterator for RangeIterator {
+impl Iterator for Range {
     type Item = usize;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -67,12 +49,7 @@ fn main(input: &str) -> (usize, usize) {
                 return false;
             }
 
-            let mid = 10usize.pow(n / 2);
-            let prefix = id.checked_div(mid).unwrap();
-            let mask = prefix * mid;
-            let suffix = id - mask;
-
-            prefix == suffix
+            has_repeat_seq_of_len(*id, n / 2)
         })
         .sum();
 
@@ -82,10 +59,9 @@ fn main(input: &str) -> (usize, usize) {
         .filter(|id| {
             let n = id.checked_ilog10().unwrap() + 1;
 
-            (1..n / 2 + 1)
+            (1..=n / 2)
                 .filter(|d| n % d == 0)
-                .map(|d| has_repeat_seq_of_len(*id, d))
-                .any(|res| res)
+                .any(|d| has_repeat_seq_of_len(*id, d))
         })
         .sum();
 
@@ -96,6 +72,7 @@ fn has_repeat_seq_of_len(id: usize, n: u32) -> bool {
     let mut candidate = id;
     let mut parts = vec![];
     let divisor = 10usize.pow(n);
+
     while candidate != 0 {
         let prefix = candidate.checked_div(divisor).unwrap();
         let mask = prefix * divisor;
