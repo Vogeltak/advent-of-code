@@ -1,19 +1,18 @@
 use itertools::Itertools;
 
-fn max_battery(battery: &[u8]) -> usize {
+fn max_bank(bank: &[u8], how_many: usize) -> usize {
     let mut joltage = String::new();
+    let mut sp = 0;
 
-    // Find the maximum joltage battery while not considering the final one in the bank yet
-    let i = (0..battery.len() - 1)
-        .max_by_key(|&x| (battery[x], usize::MAX - x))
-        .unwrap();
+    for i in 0..how_many {
+        sp = (sp..bank.len() - how_many + i + 1)
+            .max_by_key(|&x| (bank[x], usize::MAX - x))
+            .unwrap();
 
-    let max = battery[i];
-    joltage.push(max as char);
+        joltage.push(bank[sp] as char);
 
-    // Find the second battery, starting from the index after the first one
-    let j = (i + 1..battery.len()).max_by_key(|&x| battery[x]).unwrap();
-    joltage.push(battery[j] as char);
+        sp += 1;
+    }
 
     joltage.parse().unwrap()
 }
@@ -22,9 +21,10 @@ fn max_battery(battery: &[u8]) -> usize {
 fn main(input: &str) -> (usize, usize) {
     let banks = input.lines().map(|l| l.bytes().collect_vec()).collect_vec();
 
-    let p1 = banks.iter().map(|b| max_battery(b)).sum();
+    let p1 = banks.iter().map(|b| max_bank(b, 2)).sum();
+    let p2 = banks.iter().map(|b| max_bank(b, 12)).sum();
 
-    (p1, 0)
+    (p1, p2)
 }
 
 #[cfg(test)]
@@ -34,6 +34,12 @@ mod tests {
     #[test]
     fn start_with_second_highest_number() {
         let battery = "811111111111119".as_bytes();
-        assert_eq!(max_battery(battery), 89);
+        assert_eq!(max_bank(battery, 2), 89);
+    }
+
+    #[test]
+    fn same_but_with_12() {
+        let battery = "811111111111119".as_bytes();
+        assert_eq!(max_bank(battery, 12), 811111111119);
     }
 }
